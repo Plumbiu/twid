@@ -2,7 +2,7 @@ import fs from 'node:fs/promises'
 import { launch } from 'puppeteer'
 import color from 'picocolors'
 import { CliOptions, Media } from './types'
-import { isCompliantUrl, scrollToBottom } from './utils'
+import { isCompliantUrl, resolveURLType, scrollToBottom } from './utils'
 
 export async function scraperImg(
   url: string,
@@ -20,14 +20,12 @@ export async function scraperImg(
   await page.goto(url, {
     waitUntil: ['load'],
   })
-  if (token) {
-    await page.setCookie({
-      name: 'auth_token',
-      value: token,
-    })
-    await page.reload()
-    await page.goto(url)
-  }
+  await page.setCookie({
+    name: 'auth_token',
+    value: token,
+  })
+  await page.reload()
+  await page.goto(url + '/media')
   await page.setViewport({
     width: 0,
     height: 2000,
@@ -50,9 +48,9 @@ export async function scraperImg(
 }
 
 const BASE64_REX = /^data:(.+);base64,(.+)$/
-
 export async function dlImg(
   meidas: Media[],
+  user: string,
   { outDir, dev, product }: Pick<CliOptions, 'outDir' | 'dev' | 'product'>,
 ) {
   const total = meidas.length
@@ -62,6 +60,7 @@ export async function dlImg(
     devtools: dev ? true : false,
     product,
   })
+  // FIXME: Promise.all doesn't work for puppeteer
   for (let i = 0; i < total; i++) {
     const { url } = meidas[i]
     let writePath: string = ''
@@ -74,12 +73,7 @@ export async function dlImg(
           return
         }
         writePath = `${writePerfix}.${m[1].split('/')[1]}`
-        await fs.writeFile(writePath, m[2])
-        console.log(
-          color.green(writePath) +
-            '  ' +
-            color.bold(color.white(`${i + 1}/${total}`)),
-        )
+        fs.writeFile(writePath, m[2])
         return
       }
 
@@ -93,7 +87,7 @@ export async function dlImg(
       if (buffer === undefined) {
         return
       }
-      writePath = `${writePerfix}.png`
+      writePath = `${writePerfix}.${resolveURLType(url)}`
       await fs.writeFile(writePath, buffer)
       await page.close()
     } catch (error: any) {
@@ -101,6 +95,8 @@ export async function dlImg(
     } finally {
       console.log(
         '  ' +
+          color.cyan(user) +
+          ' ❯ ' +
           color.green(writePath) +
           '  ' +
           color.bold(color.white(`${i + 1}/${total}`)),

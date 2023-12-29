@@ -6,7 +6,7 @@ export interface Media {
 
 export interface CliOptions {
   outDir: string
-  token: string | undefined
+  token: string
   dev: boolean
   product: Product
 }

@@ -18,45 +18,50 @@ cli
   .option('-P, --product [product]', 'Use chrome of firefox', {
     default: 'chrome',
   })
-  .action(async (users, { outDir, token, dev, product }: CliOptions) => {
-    console.log(
-      `${colors.green('ℹ')} users(${users.length}) ❯ (${colors.cyan(
-        users.join(', '),
-      )})`,
-    )
-    for (const user of users) {
-      const outputDir = outDir + '/' + user
-      const baseUrl = XURL + user + '/media'
-      mkChainDir(outputDir)
-      const medias: Media[] = (
-        await scraperImg(baseUrl, {
-          token,
-          dev,
-          product,
-        })
+  .action(
+    async (users: string[], { outDir, token, dev, product }: CliOptions) => {
+      console.log(
+        `${colors.green('ℹ')} users(${users.length}) ❯ (${colors.cyan(
+          users.join(', '),
+        )})`,
       )
-        .map((raw) => ({
-          url: resolveURL(baseUrl, raw),
-        }))
-        .filter((m) => isCompliantUrl(m.url))
+      Promise.all(
+        users.map(async (user) => {
+          const outputDir = outDir + '/' + user
+          const baseUrl = XURL + user
+          mkChainDir(outputDir)
+          const medias: Media[] = (
+            await scraperImg(baseUrl, {
+              token,
+              dev,
+              product,
+            })
+          )
+            .map((raw) => ({
+              url: resolveURL(baseUrl, raw),
+            }))
+            .filter((m) => isCompliantUrl(m.url))
 
-      console.log(
-        colors.green('✔ ') +
-          colors.cyan('user(') +
-          user +
-          ') ❯ ' +
-          `find ${medias.length} images`,
+          console.log(
+            colors.green('✔ ') +
+              colors.cyan('user(') +
+              user +
+              ') ❯ ' +
+              `find ${medias.length} images`,
+          )
+          dlImg(medias, user, { outDir: outputDir, dev, product }).then(() => {
+            console.log(
+              colors.green('✔ ') +
+                colors.cyan('user(') +
+                user +
+                ') ❯ ' +
+                `save ${medias.length} images`,
+            )
+          })
+        }),
       )
-      await dlImg(medias, { outDir: outputDir, dev, product })
-      console.log(
-        colors.green('✔ ') +
-          colors.cyan('user(') +
-          user +
-          ') ❯ ' +
-          `save ${medias.length} images`,
-      )
-    }
-  })
+    },
+  )
 
 cli.help()
 cli.parse()
