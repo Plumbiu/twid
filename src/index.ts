@@ -49,15 +49,14 @@ cli
               ') ❯ ' +
               `find ${medias.length} images`,
           )
-          dlImg(medias, user, { outDir: outputDir, dev, product }).then(() => {
-            console.log(
-              colors.green('✔ ') +
-                colors.cyan('user(') +
-                user +
-                ') ❯ ' +
-                `save ${medias.length} images`,
-            )
-          })
+          await dlImg(medias, user, { outDir: outputDir, dev, product })
+          console.log(
+            colors.green('✔ ') +
+              colors.cyan('user(') +
+              user +
+              ') ❯ ' +
+              `save ${medias.length} images`,
+          )
         }),
       )
     },
