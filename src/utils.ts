@@ -74,7 +74,7 @@ export async function scrollToBottom(page: Page) {
         // let scrollHeight = document.body.scrollHeight
         window.scrollBy(0, distance)
         totalHeight += distance
-        if (totalHeight >= 2000) {
+        if (totalHeight >= 50000) {
           clearInterval(timer)
           resolve()
         }
