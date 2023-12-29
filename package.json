@@ -1,0 +1,51 @@
+{
+  "name": "twid",
+  "version": "0.0.1",
+  "description": "A simple Twitter images scraping in headless mode for Chrome and Firefox, written in nodejs and doesn't need the Twitter API",
+  "main": "dist/index.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsup",
+    "test:dev": "pnpm vitest",
+    "test": "pnpm vitest --run"
+  },
+  "keywords": [
+    "twitter",
+    "x",
+    "download",
+    "crawler",
+    "web",
+    "img",
+    "picture",
+    "media"
+  ],
+  "bin": {
+    "twid": "dist/index.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/truthRestorer/twid.git"
+  },
+  "bugs": {
+    "url": "https://github.com/truthRestorer/twid/issues"
+  },
+  "homepage": "https://github.com/truthRestorer/twid#readme",
+  "author": "Plumbiu",
+  "license": "MIT",
+  "devDependencies": {
+    "@plumbiu/eslint-config": "^0.2.0",
+    "@types/node": "^20.10.5",
+    "cac": "^6.7.14",
+    "eslint": "^8.56.0",
+    "picocolors": "^1.0.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3",
+    "vitest": "^1.1.0"
+  },
+  "dependencies": {
+    "puppeteer": "^21.6.1"
+  }
+}

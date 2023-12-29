@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "sourceMap": false,
+    "target": "ES2020",
+    "newLine": "crlf",
+    "useDefineForClassFields": false,
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "allowJs": false,
+    "strict": true,
+    "noUnusedLocals": true,
+    "experimentalDecorators": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "removeComments": false,
+    "lib": ["es2022", "DOM"],
+    "rootDir": "."
+  },
+  "ts-node": {
+    "esm": true
+  },
+  "include": ["**/*.ts", "**/*.d.ts"]
+}
