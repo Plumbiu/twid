@@ -67,18 +67,18 @@ export function isCompliantUrl(url: string) {
  */
 export async function scrollToBottom(page: Page) {
   await page.evaluate(async () => {
-    await new Promise<void>((resolve, reject) => {
+    await new Promise<void>((resolve, _reject) => {
       let totalHeight = 0
-      let distance = 1000
+      const distance = 100
       const timer = setInterval(() => {
-        // let scrollHeight = document.body.scrollHeight
+        const scrollHeight = document.body.scrollHeight
         window.scrollBy(0, distance)
         totalHeight += distance
-        if (totalHeight >= 50000) {
+        if (totalHeight >= scrollHeight) {
           clearInterval(timer)
           resolve()
         }
-      }, 1500)
+      }, 100)
     })
   })
 }
