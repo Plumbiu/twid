@@ -13,4 +13,5 @@ export interface CliOptions {
   token: string
   dev: boolean
   product: Product
+  limit: number
 }

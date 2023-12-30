@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import fsp from 'node:fs/promises'
-import { launch, type Page } from 'puppeteer'
+import { launch, type Page, KnownDevices } from 'puppeteer'
 import color from 'picocolors'
 import axios from 'axios'
 import { CliOptions, Media } from './types'
@@ -15,8 +15,10 @@ import {
   resolveVideoInfo,
 } from './utils'
 
+const iPhone = KnownDevices['iPhone 6']
+
 export async function scraperMedias(
-  url: string,
+  baseUrl: string,
   user: string,
   { token, dev, product }: Pick<CliOptions, 'token' | 'dev' | 'product'>,
 ) {
@@ -29,20 +31,14 @@ export async function scraperMedias(
   const images: Set<string> = new Set()
   const videos: Set<string> = new Set()
   const page = await browser.newPage()
-  await page.goto(url, {
-    waitUntil: ['load'],
-  })
+  // mobile device cost less flow and take less time to load
+  await page.emulate(iPhone)
+  await page.goto(baseUrl)
   await page.setCookie({
     name: 'auth_token',
     value: token,
   })
-  await page.reload()
-  await page.goto(url + '/media')
-  await page.setViewport({
-    width: 0,
-    height: 2000,
-    deviceScaleFactor: 0.1,
-  })
+  await page.goto(baseUrl + '/media')
   page.on('request', async (req) => {
     const reqType = req.resourceType()
     const reqUrl = req.url()
@@ -52,30 +48,27 @@ export async function scraperMedias(
           reqUrl.indexOf(GIF_PARAM) + GIF_PARAM.length,
           reqUrl.lastIndexOf('?'),
         )
-        const videoUrl = `https://video.twimg.com/tweet_video/${hash}.mp4`
+        const url = `https://video.twimg.com/tweet_video/${hash}.mp4`
         videos.add(resolveMediaBuild(url, 'mp4', 'video'))
         console.log(
-          '  ' + color.cyan(user) + ` ❯ ${color.green(videoUrl)} ❯ ` + 'mp4',
+          '  ' + color.cyan(user) + ` ❯ ${color.green(url)} ❯ ` + 'mp4',
         )
       } else if (isCompliantUrl(reqUrl)) {
-        const imageUrl = resolveURL(reqUrl)
-        const imageExt = resolveURLType(reqUrl)
-        images.add(resolveMediaBuild(imageUrl, imageExt, 'image'))
-        console.log(
-          '  ' + color.cyan(user) + ` ❯ ${color.green(imageUrl)} ❯ ` + imageExt,
-        )
+        const url = resolveURL(reqUrl)
+        const ext = resolveURLType(reqUrl)
+        images.add(resolveMediaBuild(url, ext, 'image'))
+        console.log('  ' + color.cyan(user) + ` ❯ ${color.green(url)} ❯ ` + ext)
       }
     }
   })
   page.on('response', async (res) => {
-    const requestUrl = res.url()
-    if (requestUrl.includes('UserMedia')) {
+    const url = res.url()
+    if (url.includes('UserMedia')) {
       const requestSource = await res.text()
       resolveVideoInfo(requestSource, videos, user)
     }
   })
   await scrollToBottom(page)
-  await page.close()
   await browser.close()
 
   return {
@@ -91,7 +84,7 @@ export async function downloadMedias(
 ) {
   const total = medias.length
   let i = 1
-  await Promise.all(
+  await Promise.race(
     medias.map(async ({ url, ext, type }) => {
       const writePath: string = `./${outDir}/${Date.now()}.${ext}`
       try {
@@ -114,7 +107,6 @@ export async function downloadMedias(
           await fsp.writeFile(writePath, res.data)
         }
       } catch (error: any) {
-        console.error(error.message)
       } finally {
         console.log(
           '  ' +
@@ -143,7 +135,7 @@ async function scrollToBottom(page: Page) {
           clearInterval(timer)
           resolve()
         }
-      }, 300)
+      }, 350)
     })
   })
 }

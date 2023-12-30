@@ -1,4 +1,3 @@
-import fs from 'node:fs'
 import color from 'picocolors'
 import { Media, MediaType } from './types'
 
@@ -13,26 +12,6 @@ export function resolveURL(url: string) {
 export function resolveURLType(url: string) {
   const serach = new URLSearchParams(url.slice(url.lastIndexOf('?') + 1))
   return serach.get('format') ?? 'jpg'
-}
-
-export function resolveChainDir(dir: string) {
-  const dirArr = dir.split('/')
-  let root = dirArr[0]
-  const chainDir = [root]
-  for (let i = 1; i < dirArr.length; i++) {
-    root += '/' + dirArr[i]
-    chainDir.push(root)
-  }
-
-  return chainDir
-}
-
-export function mkChainDir(dir: string) {
-  for (const chain of resolveChainDir(dir)) {
-    if (!fs.existsSync(chain)) {
-      fs.mkdirSync(chain)
-    }
-  }
 }
 
 const excludesUrl = [

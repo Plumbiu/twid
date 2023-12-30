@@ -3,20 +3,10 @@ import { expect, test } from 'vitest'
 import media from './usermedia.json'
 import {
   isCompliantUrl,
-  resolveChainDir,
   resolveFormatMedia,
   resolveURLType,
   resolveVideoInfo,
 } from 'src/utils'
-
-test('resolveChainDir', () => {
-  let p = 'foo'
-  expect(resolveChainDir(p)).toEqual(['foo'])
-  p += '/bar'
-  expect(resolveChainDir(p)).toEqual(['foo', 'foo/bar'])
-  p += '/baz'
-  expect(resolveChainDir(p)).toEqual(['foo', 'foo/bar', 'foo/bar/baz'])
-})
 
 test('resolveURLType', () => {
   let p = 'http://foo?format=jpg'

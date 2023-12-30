@@ -1,7 +1,7 @@
+import fsp from 'node:fs/promises'
 import { cac } from 'cac'
-import colors from 'picocolors'
+import color from 'picocolors'
 import type { CliOptions } from './types'
-import { mkChainDir } from './utils'
 import { scraperMedias, downloadMedias } from './scraper'
 
 const cli = cac('twid')
@@ -12,7 +12,7 @@ cli
     default: 'media-dist',
   })
   .option('-T, --token <token>', 'The auth_token of cookies')
-  .option('-D, --dev [dev]', 'Set headless and devtools to true', {
+  .option('-D, --dev [dev]', 'Dev mode, Set headless and devtools to true', {
     default: false,
   })
   .option('-P, --product [product]', 'Use chrome of firefox', {
@@ -21,20 +21,20 @@ cli
   .action(
     async (users: string[], { outDir, token, dev, product }: CliOptions) => {
       if (!token) {
-        console.log(colors.red('ℹ need --token option'))
+        console.log(color.red('ℹ need --token option'))
         return
       }
       console.log(
-        `${colors.green('ℹ')} users(${users.length}) ❯ (${colors.cyan(
+        `${color.green('ℹ')} users(${users.length}) ❯ (${color.cyan(
           users.join(', '),
         )})`,
       )
-      const start = Date.now()
-      await Promise.all(
+      await Promise.race(
         users.map(async (user) => {
+          const start = Date.now()
           const outputDir = outDir + '/' + user
           const baseUrl = XURL + user
-          mkChainDir(outputDir)
+          fsp.mkdir(outputDir, { recursive: true })
           const { images, videos } = await scraperMedias(baseUrl, user, {
             token,
             dev,
@@ -42,8 +42,8 @@ cli
           })
 
           console.log(
-            colors.green('✔ ') +
-              colors.cyan('user') +
+            color.green('✔ ') +
+              color.cyan('user') +
               `(${user}) ❯ ` +
               `${images.length} images, ${videos.length} videos`,
           )
@@ -51,8 +51,8 @@ cli
             outDir: outputDir,
           })
           console.log(
-            colors.green('✔ ') +
-              colors.cyan('user') +
+            color.green('✔ ') +
+              color.cyan('user') +
               `(${user}) ❯ ` +
               `${Date.now() - start}ms`,
           )
