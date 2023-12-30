@@ -20,6 +20,10 @@ cli
   })
   .action(
     async (users: string[], { outDir, token, dev, product }: CliOptions) => {
+      if (!token) {
+        console.log(colors.red('ℹ need --token option'))
+        return
+      }
       console.log(
         `${colors.green('ℹ')} users(${users.length}) ❯ (${colors.cyan(
           users.join(', '),
