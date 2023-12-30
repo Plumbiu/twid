@@ -140,15 +140,12 @@ async function scrollToBottom(page: Page) {
   await page.evaluate(async () => {
     await new Promise<void>((resolve, _reject) => {
       let totalHeight = 0
-      const maxTime = 30
-      let time = 0
       const distance = 100
       const timer = setInterval(() => {
         const scrollHeight = document.body.scrollHeight
         window.scrollBy(0, distance)
         totalHeight += distance
-        time++
-        if (totalHeight >= scrollHeight || time > maxTime) {
+        if (totalHeight >= scrollHeight) {
           clearInterval(timer)
           resolve()
         }
