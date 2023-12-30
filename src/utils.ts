@@ -1,6 +1,6 @@
 import fs from 'node:fs'
 import color from 'picocolors'
-import { Media } from './types'
+import { Media, MediaType } from './types'
 
 export async function wait(mil: number) {
   await new Promise((r) => setTimeout(r, mil))
@@ -65,7 +65,7 @@ interface VideoVarinat {
 
 export function resolveVideoInfo(
   data: string,
-  videos: Set<Media>,
+  videos: Set<string>,
   user: string,
 ) {
   let m
@@ -95,9 +95,24 @@ export function resolveVideoInfo(
     if (ext === '' || videoUrl === '') {
       return
     }
-    videos.add({ url: videoUrl, ext: ext, type: 'video' })
+    videos.add(resolveMediaBuild(videoUrl, ext, 'video'))
     console.log(
       '  ' + color.cyan(user) + ` ❯ ${color.green(videoUrl)} ❯ ` + ext,
     )
   }
+}
+
+export function resolveMediaBuild(url: string, ext: string, type: MediaType) {
+  return `${url}___@${ext}___@${type}`
+}
+
+export function resolveFormatMedia(medias: Set<string>) {
+  return [...medias].map((str) => {
+    const [url, ext, type] = str.split('___@')
+    return {
+      url,
+      ext,
+      type,
+    } as Media
+  })
 }

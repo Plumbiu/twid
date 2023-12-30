@@ -1,9 +1,11 @@
 import type { Product } from 'puppeteer'
 
+export type MediaType = 'image' | 'video'
+
 export interface Media {
   url: string
   ext: string
-  type: 'image' | 'video'
+  type: MediaType
 }
 
 export interface CliOptions {

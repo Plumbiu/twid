@@ -8,6 +8,8 @@ import {
   GIF_PARAM,
   isCompliantUrl,
   isGifUrl,
+  resolveFormatMedia,
+  resolveMediaBuild,
   resolveURL,
   resolveURLType,
   resolveVideoInfo,
@@ -24,8 +26,8 @@ export async function scraperMedias(
     devtools: dev === true ? true : false,
     product,
   })
-  const imgs: Set<Media> = new Set()
-  const videos: Set<Media> = new Set()
+  const images: Set<string> = new Set()
+  const videos: Set<string> = new Set()
   const page = await browser.newPage()
   await page.goto(url, {
     waitUntil: ['load'],
@@ -51,22 +53,14 @@ export async function scraperMedias(
           reqUrl.lastIndexOf('?'),
         )
         const videoUrl = `https://video.twimg.com/tweet_video/${hash}.mp4`
-        videos.add({
-          url: videoUrl,
-          ext: 'mp4',
-          type: 'video',
-        })
+        videos.add(resolveMediaBuild(url, 'mp4', 'video'))
         console.log(
           '  ' + color.cyan(user) + ` ❯ ${color.green(videoUrl)} ❯ ` + 'mp4',
         )
       } else if (isCompliantUrl(reqUrl)) {
         const imageUrl = resolveURL(reqUrl)
         const imageExt = resolveURLType(reqUrl)
-        imgs.add({
-          url: imageUrl,
-          ext: imageExt,
-          type: 'image',
-        })
+        images.add(resolveMediaBuild(imageUrl, imageExt, 'image'))
         console.log(
           '  ' + color.cyan(user) + ` ❯ ${color.green(imageUrl)} ❯ ` + imageExt,
         )
@@ -85,8 +79,8 @@ export async function scraperMedias(
   await browser.close()
 
   return {
-    imgs: [...imgs],
-    videos: [...videos],
+    images: resolveFormatMedia(images),
+    videos: resolveFormatMedia(videos),
   }
 }
 

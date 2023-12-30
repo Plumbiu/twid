@@ -35,7 +35,7 @@ cli
           const outputDir = outDir + '/' + user
           const baseUrl = XURL + user
           mkChainDir(outputDir)
-          const { imgs, videos } = await scraperMedias(baseUrl, user, {
+          const { images, videos } = await scraperMedias(baseUrl, user, {
             token,
             dev,
             product,
@@ -45,9 +45,9 @@ cli
             colors.green('✔ ') +
               colors.cyan('user') +
               `(${user}) ❯ ` +
-              `${imgs.length} images, ${videos.length} videos`,
+              `${images.length} images, ${videos.length} videos`,
           )
-          await downloadMedias([...imgs, ...videos], user, {
+          await downloadMedias([...images, ...videos], user, {
             outDir: outputDir,
           })
           console.log(

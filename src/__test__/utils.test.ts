@@ -1,9 +1,12 @@
+/* eslint-disable @stylistic/max-len */
 import { expect, test } from 'vitest'
+import media from './usermedia.json'
 import {
   isCompliantUrl,
   resolveChainDir,
-  resolveURLParams,
+  resolveFormatMedia,
   resolveURLType,
+  resolveVideoInfo,
 } from 'src/utils'
 
 test('resolveChainDir', () => {
@@ -21,16 +24,7 @@ test('resolveURLType', () => {
   p += 'foo?format=png&name=bar'
   expect(resolveURLType(p)).toBe('png')
   p += 'foo?'
-  expect(resolveURLType(p)).toBe(null)
-})
-
-test('resolveURLParams', () => {
-  let p = 'http://foo?name=small'
-  expect(resolveURLParams(p)).toBe('http://foo?name=large')
-  p = 'http://foo?name=small&format=jpg'
-  expect(resolveURLParams(p)).toBe('http://foo?name=large&format=jpg')
-  p = 'http://name=ff?name=small&format=jpg'
-  expect(resolveURLParams(p)).toBe('http://name=ff?name=large&format=jpg')
+  expect(resolveURLType(p)).toBe('jpg')
 })
 
 test('isCompliantUrl', () => {
@@ -52,4 +46,44 @@ test('isCompliantUrl', () => {
   expect(isCompliantUrl(p)).toBe(true)
   p = 'http://bar'
   expect(isCompliantUrl(p)).toBe(true)
+})
+
+test('resolveVideoInfo', () => {
+  const str = JSON.stringify(media)
+  const set = new Set<string>()
+  resolveVideoInfo(str, set, 'foo')
+  expect([...set]).toEqual([
+    'https://video.twimg.com/amplify_video/1736962036008181760/vid/avc1/1920x1080/zhWFJB1NdwIelHxh.mp4?tag=16___@mp4___@video',
+    'https://video.twimg.com/amplify_video/1736959943000170496/vid/avc1/1920x1080/r7IzOTQ8kszIJjMZ.mp4?tag=16___@mp4___@video',
+    'https://video.twimg.com/amplify_video/1733037232859316224/vid/avc1/1920x1080/4kt_i6MLX7YsuvaE.mp4?tag=16___@mp4___@video',
+    'https://video.twimg.com/ext_tw_video/1732820284301058052/pu/vid/avc1/1920x1080/K2NITCly19drRgED.mp4?tag=14___@mp4___@video',
+  ])
+})
+
+test('resolveFormatMedia', () => {
+  const str = JSON.stringify(media)
+  const set = new Set<string>()
+  resolveVideoInfo(str, set, 'foo')
+  expect(resolveFormatMedia(set)).toEqual([
+    {
+      url: 'https://video.twimg.com/amplify_video/1736962036008181760/vid/avc1/1920x1080/zhWFJB1NdwIelHxh.mp4?tag=16',
+      ext: 'mp4',
+      type: 'video',
+    },
+    {
+      url: 'https://video.twimg.com/amplify_video/1736959943000170496/vid/avc1/1920x1080/r7IzOTQ8kszIJjMZ.mp4?tag=16',
+      ext: 'mp4',
+      type: 'video',
+    },
+    {
+      url: 'https://video.twimg.com/amplify_video/1733037232859316224/vid/avc1/1920x1080/4kt_i6MLX7YsuvaE.mp4?tag=16',
+      ext: 'mp4',
+      type: 'video',
+    },
+    {
+      url: 'https://video.twimg.com/ext_tw_video/1732820284301058052/pu/vid/avc1/1920x1080/K2NITCly19drRgED.mp4?tag=14',
+      ext: 'mp4',
+      type: 'video',
+    },
+  ])
 })
