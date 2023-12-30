@@ -1,4 +1,4 @@
-# twid - Twitter Images Download
+# twid - Twitter Intelligent Download
 
 > Scraping Twitter by headless mode, no API and limit.
 
