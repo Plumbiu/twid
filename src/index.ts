@@ -1,8 +1,8 @@
 import { cac } from 'cac'
 import colors from 'picocolors'
-import type { CliOptions, Media } from './types'
-import { isCompliantUrl, mkChainDir, resolveURL } from './utils'
-import { scraperImg, dlImg } from './scraper'
+import type { CliOptions } from './types'
+import { mkChainDir } from './utils'
+import { scraperMedias, downloadMedias } from './scraper'
 
 const cli = cac('twid')
 const XURL = 'https://twitter.com/'
@@ -25,37 +25,32 @@ cli
           users.join(', '),
         )})`,
       )
-      Promise.all(
+      const start = Date.now()
+      await Promise.all(
         users.map(async (user) => {
           const outputDir = outDir + '/' + user
           const baseUrl = XURL + user
           mkChainDir(outputDir)
-          const medias: Media[] = (
-            await scraperImg(baseUrl, {
-              token,
-              dev,
-              product,
-            })
-          )
-            .map((raw) => ({
-              url: resolveURL(raw),
-            }))
-            .filter((m) => isCompliantUrl(m.url))
+          const { imgs, videos } = await scraperMedias(baseUrl, user, {
+            token,
+            dev,
+            product,
+          })
 
           console.log(
             colors.green('✔ ') +
-              colors.cyan('user(') +
-              user +
-              ') ❯ ' +
-              `find ${medias.length} images`,
+              colors.cyan('user') +
+              `(${user}) ❯ ` +
+              `${imgs.length} images, ${videos.length} videos`,
           )
-          await dlImg(medias, user, { outDir: outputDir, dev, product })
+          await downloadMedias([...imgs, ...videos], user, {
+            outDir: outputDir,
+          })
           console.log(
             colors.green('✔ ') +
-              colors.cyan('user(') +
-              user +
-              ') ❯ ' +
-              `save ${medias.length} images`,
+              colors.cyan('user') +
+              `(${user}) ❯ ` +
+              `${Date.now() - start}ms`,
           )
         }),
       )

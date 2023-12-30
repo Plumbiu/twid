@@ -1,11 +1,21 @@
-import fs from 'node:fs/promises'
-import { launch } from 'puppeteer'
+import fs from 'node:fs'
+import fsp from 'node:fs/promises'
+import { launch, type Page } from 'puppeteer'
 import color from 'picocolors'
+import axios from 'axios'
 import { CliOptions, Media } from './types'
-import { isCompliantUrl, resolveURLType, scrollToBottom } from './utils'
+import {
+  GIF_PARAM,
+  isCompliantUrl,
+  isGifUrl,
+  resolveURL,
+  resolveURLType,
+  resolveVideoInfo,
+} from './utils'
 
-export async function scraperImg(
+export async function scraperMedias(
   url: string,
+  user: string,
   { token, dev, product }: Pick<CliOptions, 'token' | 'dev' | 'product'>,
 ) {
   const browser = await launch({
@@ -14,9 +24,9 @@ export async function scraperImg(
     devtools: dev === true ? true : false,
     product,
   })
-  const imgs: Set<string> = new Set()
+  const imgs: Set<Media> = new Set()
+  const videos: Set<Media> = new Set()
   const page = await browser.newPage()
-
   await page.goto(url, {
     waitUntil: ['load'],
   })
@@ -31,77 +41,118 @@ export async function scraperImg(
     height: 2000,
     deviceScaleFactor: 0.1,
   })
-  page.on('request', (req) => {
-    if (req.resourceType() === 'image') {
-      const url = req.url()
-      // TODO: support video
-      if (isCompliantUrl(url)) {
-        imgs.add(url)
+  page.on('request', async (req) => {
+    const reqType = req.resourceType()
+    const reqUrl = req.url()
+    if (reqType === 'image') {
+      if (isGifUrl(reqUrl)) {
+        const hash = reqUrl.slice(
+          reqUrl.indexOf(GIF_PARAM) + GIF_PARAM.length,
+          reqUrl.lastIndexOf('?'),
+        )
+        const videoUrl = `https://video.twimg.com/tweet_video/${hash}.mp4`
+        videos.add({
+          url: videoUrl,
+          ext: 'mp4',
+          type: 'video',
+        })
+        console.log(
+          '  ' + color.cyan(user) + ` ❯ ${color.green(videoUrl)} ❯ ` + 'mp4',
+        )
+      } else if (isCompliantUrl(reqUrl)) {
+        const imageUrl = resolveURL(reqUrl)
+        const imageExt = resolveURLType(reqUrl)
+        imgs.add({
+          url: imageUrl,
+          ext: imageExt,
+          type: 'image',
+        })
+        console.log(
+          '  ' + color.cyan(user) + ` ❯ ${color.green(imageUrl)} ❯ ` + imageExt,
+        )
       }
     }
   })
-  // await page.waitForSelector('img')
+  page.on('response', async (res) => {
+    const requestUrl = res.url()
+    if (requestUrl.includes('UserMedia')) {
+      const requestSource = await res.text()
+      resolveVideoInfo(requestSource, videos, user)
+    }
+  })
   await scrollToBottom(page)
   await page.close()
   await browser.close()
-  return [...imgs]
+
+  return {
+    imgs: [...imgs],
+    videos: [...videos],
+  }
 }
 
-const BASE64_REX = /^data:(.+);base64,(.+)$/
-export async function dlImg(
-  meidas: Media[],
+export async function downloadMedias(
+  medias: Media[],
   user: string,
-  { outDir, dev, product }: Pick<CliOptions, 'outDir' | 'dev' | 'product'>,
+  { outDir }: Pick<CliOptions, 'outDir'>,
 ) {
-  const total = meidas.length
-  const browser = await launch({
-    ignoreHTTPSErrors: true,
-    headless: dev ? false : 'new',
-    devtools: dev ? true : false,
-    product,
-  })
-  // FIXME: Promise.all doesn't work for puppeteer
-  for (let i = 0; i < total; i++) {
-    const { url } = meidas[i]
-    let writePath: string = ''
-    try {
-      const writePerfix = `./${outDir}/${Date.now()}`
-      // base64
-      if (!url.startsWith('http')) {
-        const m = url.match(BASE64_REX)
-        if (m === null || m[2] === undefined) {
-          return
+  const total = medias.length
+  let i = 1
+  await Promise.all(
+    medias.map(async ({ url, ext, type }) => {
+      const writePath: string = `./${outDir}/${Date.now()}.${ext}`
+      try {
+        if (type === 'video') {
+          const res = await axios.get(url, { responseType: 'stream' })
+          const stream = res.data
+          stream.on('error', (err: any) => {
+            throw new Error(err.message)
+          })
+          const writeStream = stream.pipe(fs.createWriteStream(writePath))
+          writeStream.on('finish', () => {
+            writeStream.close()
+          })
+          writeStream.on('error', (err: any) => {
+            writeStream.close()
+            throw new Error(err.message)
+          })
+        } else {
+          const res = await axios.get(url, { responseType: 'arraybuffer' })
+          await fsp.writeFile(writePath, res.data)
         }
-        writePath = `${writePerfix}.${m[1].split('/')[1]}`
-        fs.writeFile(writePath, m[2])
-        return
-      }
-
-      const page = await browser.newPage()
-      await page.goto(url, {
-        waitUntil: ['load'],
-      })
-      await page.setCacheEnabled(false)
-      const img = await page.waitForSelector('img')
-      const buffer = await img?.screenshot()
-      if (buffer === undefined) {
-        return
-      }
-      writePath = `${writePerfix}.${resolveURLType(url)}`
-      await fs.writeFile(writePath, buffer)
-      await page.close()
-    } catch (error: any) {
-      console.error(error.message)
-    } finally {
-      console.log(
-        '  ' +
-          color.cyan(user) +
-          ' ❯ ' +
-          color.green(writePath) +
+      } catch (error: any) {
+        console.error(error.message)
+      } finally {
+        console.log(
           '  ' +
-          color.bold(color.white(`${i + 1}/${total}`)),
-      )
-    }
-  }
-  await browser.close()
+            color.cyan(user) +
+            ` ❯ ${color.green(writePath)} ❯ ` +
+            color.white(`${i++}/${total}`),
+        )
+      }
+    }),
+  )
+}
+
+/**
+ * https://github.com/puppeteer/puppeteer/issues/305#issuecomment-385145048
+ */
+async function scrollToBottom(page: Page) {
+  await page.evaluate(async () => {
+    await new Promise<void>((resolve, _reject) => {
+      let totalHeight = 0
+      const maxTime = 30
+      let time = 0
+      const distance = 100
+      const timer = setInterval(() => {
+        const scrollHeight = document.body.scrollHeight
+        window.scrollBy(0, distance)
+        totalHeight += distance
+        time++
+        if (totalHeight >= scrollHeight || time > maxTime) {
+          clearInterval(timer)
+          resolve()
+        }
+      }, 300)
+    })
+  })
 }

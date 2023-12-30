@@ -1,5 +1,6 @@
 import fs from 'node:fs'
-import { Page } from 'puppeteer'
+import color from 'picocolors'
+import { Media } from './types'
 
 export async function wait(mil: number) {
   await new Promise((r) => setTimeout(r, mil))
@@ -11,7 +12,7 @@ export function resolveURL(url: string) {
 
 export function resolveURLType(url: string) {
   const serach = new URLSearchParams(url.slice(url.lastIndexOf('?') + 1))
-  return serach.get('format')
+  return serach.get('format') ?? 'jpg'
 }
 
 export function resolveChainDir(dir: string) {
@@ -48,24 +49,55 @@ export function isCompliantUrl(url: string) {
   }
   return true
 }
+export const GIF_PARAM = '/tweet_video_thumb/'
 
-/**
- * https://github.com/puppeteer/puppeteer/issues/305#issuecomment-385145048
- */
-export async function scrollToBottom(page: Page) {
-  await page.evaluate(async () => {
-    await new Promise<void>((resolve, _reject) => {
-      let totalHeight = 0
-      const distance = 100
-      const timer = setInterval(() => {
-        const scrollHeight = document.body.scrollHeight
-        window.scrollBy(0, distance)
-        totalHeight += distance
-        if (totalHeight >= scrollHeight) {
-          clearInterval(timer)
-          resolve()
-        }
-      }, 300)
-    })
-  })
+export function isGifUrl(url: string) {
+  return url.includes(GIF_PARAM)
+}
+
+const VIDEO_REGX = /\"video_info\"/g
+
+interface VideoVarinat {
+  bitrate: number
+  content_type: string
+  url: string
+}
+
+export function resolveVideoInfo(
+  data: string,
+  videos: Set<Media>,
+  user: string,
+) {
+  let m
+  while ((m = VIDEO_REGX.exec(data))) {
+    const videoVariantsIdx = data.indexOf('variants', m.index)
+    if (videoVariantsIdx === -1) {
+      return
+    }
+    const rightBracket = data.indexOf(']', videoVariantsIdx)
+    const leftBracket = data.indexOf('[', videoVariantsIdx)
+    if (rightBracket === -1 || leftBracket === -1) {
+      return
+    }
+    const variants: VideoVarinat[] = JSON.parse(
+      data.slice(leftBracket, rightBracket + 1),
+    )
+    let max = 0
+    let videoUrl = ''
+    let ext = ''
+    for (const { bitrate, url, content_type } of variants) {
+      if (bitrate > max) {
+        max = bitrate
+        videoUrl = url
+        ext = content_type.split('/')[1]
+      }
+    }
+    if (ext === '' || videoUrl === '') {
+      return
+    }
+    videos.add({ url: videoUrl, ext: ext, type: 'video' })
+    console.log(
+      '  ' + color.cyan(user) + ` ❯ ${color.green(videoUrl)} ❯ ` + ext,
+    )
+  }
 }
