@@ -38,7 +38,7 @@ cli
             })
           )
             .map((raw) => ({
-              url: resolveURL(baseUrl, raw),
+              url: resolveURL(raw),
             }))
             .filter((m) => isCompliantUrl(m.url))
 

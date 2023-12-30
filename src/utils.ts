@@ -5,20 +5,7 @@ export async function wait(mil: number) {
   await new Promise((r) => setTimeout(r, mil))
 }
 
-export function resolveURL(baseUrl: string, url: string) {
-  if (url[0] === '/') {
-    let prefix = baseUrl.startsWith('https') ? 'https:' : 'http:'
-    if (url[1] === '/') {
-      return prefix + url
-    }
-    prefix += '/'
-    const suffix = baseUrl[baseUrl.length - 1] === '/' ? '' : '/'
-    return prefix + baseUrl + suffix + url
-  }
-  return resolveURLParams(url)
-}
-
-export function resolveURLParams(url: string) {
+export function resolveURL(url: string) {
   return url.replace(/([&\?])name=[^&]+/, '$1name=large')
 }
 
@@ -78,7 +65,7 @@ export async function scrollToBottom(page: Page) {
           clearInterval(timer)
           resolve()
         }
-      }, 100)
+      }, 300)
     })
   })
 }
