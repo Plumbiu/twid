@@ -5,16 +5,17 @@ import color from 'picocolors'
 import axios from 'axios'
 import { Config, Media } from './types'
 import {
-  GIF_PARAM,
   isCompliantUrl,
   isGifUrl,
+  resolveFileId,
   resolveFormatMedia,
   resolveMediaBuild,
   resolveURL,
   resolveURLType,
   resolveVideoInfo,
+  wait,
 } from './utils'
-import { XURL } from './constant'
+import { GIF_PARAM, USER_AGENT_HEADER, XURL } from './constant'
 
 const iPhone = KnownDevices['iPhone 6']
 
@@ -35,6 +36,10 @@ export async function scraperMedias(
   // mobile device cost less flow and take less time to load
   await page.emulate(iPhone)
   await page.goto(baseUrl)
+  await page.setViewport({
+    width: 50,
+    height: 0,
+  })
   await page.setCookie({
     name: 'auth_token',
     value: token,
@@ -70,6 +75,7 @@ export async function scraperMedias(
     }
   })
   await scrollToBottom(page)
+  await wait(1500)
   await browser.close()
 
   return {
@@ -82,19 +88,21 @@ export async function downloadMedias(
   medias: Media[],
   user: string,
   { outDir }: Pick<Config, 'outDir'>,
+  failed: Media[],
 ) {
   const total = medias.length
   let i = 1
-  await Promise.race(
-    medias.map(async ({ url, ext, type }) => {
-      const writePath: string = `./${outDir}/${Date.now()}.${ext}`
+  await Promise.all(
+    medias.map(async ({ url, ext, type, outputDir }) => {
+      const writePath: string =
+        outputDir || `./${outDir}/${resolveFileId(url, type)}.${ext}`
       try {
         if (type === 'video') {
-          const res = await axios.get(url, { responseType: 'stream' })
-          const stream = res.data
-          stream.on('error', (err: any) => {
-            throw new Error(err.message)
+          const res = await axios.get(url, {
+            responseType: 'stream',
+            ...USER_AGENT_HEADER,
           })
+          const stream = res.data
           const writeStream = stream.pipe(fs.createWriteStream(writePath))
           writeStream.on('finish', () => {
             writeStream.close()
@@ -104,10 +112,19 @@ export async function downloadMedias(
             throw new Error(err.message)
           })
         } else {
-          const res = await axios.get(url, { responseType: 'arraybuffer' })
+          const res = await axios.get(url, {
+            responseType: 'arraybuffer',
+            ...USER_AGENT_HEADER,
+          })
           await fsp.writeFile(writePath, res.data)
         }
       } catch (error: any) {
+        failed.push({
+          url,
+          ext,
+          type,
+          outputDir: writePath,
+        })
       } finally {
         console.log(
           '  ' +
@@ -136,20 +153,20 @@ async function scrollToBottom(page: Page) {
           clearInterval(timer)
           resolve()
         }
-      }, 350)
+      }, 500)
     })
   })
 }
 
 export async function execMediaDownload(users: string[], options: Config) {
-  const { outDir, token, dev, product } = options
-  await Promise.race(
+  const { outDir, token, dev, product, retry } = options
+  await Promise.all(
     users.map(async (user) => {
       const start = Date.now()
       const outputDir = outDir + '/' + user
       const baseUrl = XURL + user
       // scrape is slow, mkdir can be sync
-      fsp.mkdir(outputDir, { recursive: true })
+      await fsp.mkdir(outputDir, { recursive: true })
       const { images, videos } = await scraperMedias(baseUrl, user, {
         token,
         dev,
@@ -162,16 +179,32 @@ export async function execMediaDownload(users: string[], options: Config) {
           `(${user}) ❯ ` +
           `${images.length} images, ${videos.length} videos`,
       )
-      await downloadMedias([...images, ...videos], user, {
-        outDir: outputDir,
-      }).finally(() => {
-        console.log(
-          color.green('✔ ') +
-            color.cyan('user') +
-            `(${user}) ❯ ` +
-            `${Date.now() - start}ms`,
-        )
-      })
+      let prevMedias: Media[] = []
+      let currMedias: Media[] = [...images, ...videos]
+      for (let i = 0; i < retry; i++) {
+        await downloadMedias(
+          currMedias,
+          user,
+          {
+            outDir: outputDir,
+          },
+          prevMedias,
+        ).finally(() => {
+          console.log(
+            color.green(`✔ ${i === 0 ? '' : `retry(${i}) `}`) +
+              color.cyan('user') +
+              `(${user}) ❯ ` +
+              `${Date.now() - start}ms`,
+          )
+        })
+        currMedias = prevMedias
+        prevMedias = []
+      }
+      console.log(
+        color.red(`faild(${currMedias.length})`) +
+          ' ❯ ' +
+          color.yellow(currMedias.join('\n')),
+      )
     }),
   )
 }

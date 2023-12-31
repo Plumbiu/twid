@@ -37,21 +37,35 @@ twid youyuxi --token YOUR_TOKEN
 twid --help
 ```
 
-```bash
-# Output
+```txt
 Usage:
-  $ twid <...users>
+  $ twid [...users]
 
 Commands:
-  <...users>
+  [...users]  
 
 For more info, run any command with the `--help` flag:
   $ twid --help
 
 Options:
-  -O, --outDir [outDir]    The output dir (default: media-dist)
-  -T, --token <token>      The auth_token of cookies
-  -D, --dev [dev]          Dev mode, Set headless and devtools to true (default: false)
-  -P, --product [product]  Use chrome of firefox (default: chrome)
-  -h, --help               Display this message
+  -O, --outDir [outDir]       The output dir (default: twid-dist)
+  -T, --token <token>         The auth_token of cookies 
+  -D, --dev [dev]             Dev mode, Set headless and devtools to true (default: false)
+  -R, --retry [proretryduct]  Retry times (default: 3)
+  -P, --product [product]     Use chrome of firefox (default: chrome)
+  -h, --help                  Display this message
+```
+
+## Config File
+
+create `twid.config.json`, the file should like this:
+
+```json
+{
+  "users": ["elonmusk", "youyuxi"],
+  "token": "YOUR_TOKEN",
+  "outDir": "./twid-dist",
+  "dev": false,
+  "product": "chrome"
+}
 ```

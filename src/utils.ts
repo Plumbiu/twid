@@ -1,5 +1,6 @@
 import color from 'picocolors'
 import { Media, MediaType } from './types'
+import { GIF_PARAM } from './constant'
 
 export async function wait(mil: number) {
   await new Promise((r) => setTimeout(r, mil))
@@ -28,7 +29,6 @@ export function isCompliantUrl(url: string) {
   }
   return true
 }
-export const GIF_PARAM = '/tweet_video_thumb/'
 
 export function isGifUrl(url: string) {
   return url.includes(GIF_PARAM)
@@ -94,4 +94,12 @@ export function resolveFormatMedia(medias: Set<string>) {
       type,
     } as Media
   })
+}
+
+export function resolveFileId(url: string, type: MediaType) {
+  const result = url.slice(url.lastIndexOf('/') + 1, url.lastIndexOf('?'))
+  if (type === 'image') {
+    return result
+  }
+  return result.slice(0, result.lastIndexOf('.'))
 }

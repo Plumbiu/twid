@@ -15,6 +15,9 @@ cli
   .option('-D, --dev [dev]', 'Dev mode, Set headless and devtools to true', {
     default: false,
   })
+  .option('-R, --retry [proretryduct]', 'Retry times', {
+    default: 3,
+  })
   .option('-P, --product [product]', 'Use chrome of firefox', {
     default: 'chrome',
   })
@@ -27,13 +30,12 @@ cli
       token: '',
       dev: false,
       product: 'chrome',
+      retry: 3,
     }
     if (fs.existsSync(CONFIG_FILE)) {
       const fileConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'))
       Object.assign(options, { ...cliConfig, users }, fileConfig)
     }
-    console.log({ options })
-
     if (!options.token) {
       console.log(color.red('ℹ need --token option'))
     } else if (!options.users) {
