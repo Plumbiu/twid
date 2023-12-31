@@ -17,5 +17,4 @@ const __dirname=dirname(__filename);
 const require=createRequire(import.meta.url);
     `.trim(),
   },
-  noExternal: [/(.*)/],
 })
