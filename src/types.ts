@@ -8,10 +8,9 @@ export interface Media {
   type: MediaType
 }
 
-export interface CliOptions {
+export interface Config {
   outDir: string
   token: string
   dev: boolean
   product: Product
-  limit: number
 }

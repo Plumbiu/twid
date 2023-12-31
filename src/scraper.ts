@@ -3,7 +3,7 @@ import fsp from 'node:fs/promises'
 import { launch, type Page, KnownDevices } from 'puppeteer'
 import color from 'picocolors'
 import axios from 'axios'
-import { CliOptions, Media } from './types'
+import { Config, Media } from './types'
 import {
   GIF_PARAM,
   isCompliantUrl,
@@ -14,13 +14,14 @@ import {
   resolveURLType,
   resolveVideoInfo,
 } from './utils'
+import { XURL } from './constant'
 
 const iPhone = KnownDevices['iPhone 6']
 
 export async function scraperMedias(
   baseUrl: string,
   user: string,
-  { token, dev, product }: Pick<CliOptions, 'token' | 'dev' | 'product'>,
+  { token, dev, product }: Pick<Config, 'token' | 'dev' | 'product'>,
 ) {
   const browser = await launch({
     ignoreHTTPSErrors: true,
@@ -80,7 +81,7 @@ export async function scraperMedias(
 export async function downloadMedias(
   medias: Media[],
   user: string,
-  { outDir }: Pick<CliOptions, 'outDir'>,
+  { outDir }: Pick<Config, 'outDir'>,
 ) {
   const total = medias.length
   let i = 1
@@ -138,4 +139,39 @@ async function scrollToBottom(page: Page) {
       }, 350)
     })
   })
+}
+
+export async function execMediaDownload(users: string[], options: Config) {
+  const { outDir, token, dev, product } = options
+  await Promise.race(
+    users.map(async (user) => {
+      const start = Date.now()
+      const outputDir = outDir + '/' + user
+      const baseUrl = XURL + user
+      // scrape is slow, mkdir can be sync
+      fsp.mkdir(outputDir, { recursive: true })
+      const { images, videos } = await scraperMedias(baseUrl, user, {
+        token,
+        dev,
+        product,
+      })
+
+      console.log(
+        color.green('✔ ') +
+          color.cyan('user') +
+          `(${user}) ❯ ` +
+          `${images.length} images, ${videos.length} videos`,
+      )
+      await downloadMedias([...images, ...videos], user, {
+        outDir: outputDir,
+      }).finally(() => {
+        console.log(
+          color.green('✔ ') +
+            color.cyan('user') +
+            `(${user}) ❯ ` +
+            `${Date.now() - start}ms`,
+        )
+      })
+    }),
+  )
 }
