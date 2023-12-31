@@ -1,6 +1,9 @@
+import { pipeline as streamPipeline } from 'node:stream/promises'
+import fs from 'node:fs'
 import color from 'picocolors'
+import { got } from 'got'
 import { Media, MediaType } from './types'
-import { GIF_PARAM } from './constant'
+import { GIF_PARAM, USER_AGENT_HEADER } from './constant'
 
 export async function wait(mil: number) {
   await new Promise((r) => setTimeout(r, mil))
@@ -102,4 +105,13 @@ export function resolveFileId(url: string, type: MediaType) {
     return result
   }
   return result.slice(0, result.lastIndexOf('.'))
+}
+
+export async function streamPipe(url: string, outputDir: string) {
+  await streamPipeline(
+    got.stream(url, {
+      ...USER_AGENT_HEADER,
+    }),
+    fs.createWriteStream(outputDir),
+  )
 }

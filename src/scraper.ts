@@ -1,8 +1,7 @@
-import fs from 'node:fs'
 import fsp from 'node:fs/promises'
 import { launch, type Page, KnownDevices } from 'puppeteer'
 import color from 'picocolors'
-import axios from 'axios'
+import { got } from 'got'
 import { Config, Media } from './types'
 import {
   isCompliantUrl,
@@ -13,6 +12,7 @@ import {
   resolveURL,
   resolveURLType,
   resolveVideoInfo,
+  streamPipe,
   wait,
 } from './utils'
 import { GIF_PARAM, USER_AGENT_HEADER, XURL } from './constant'
@@ -89,31 +89,19 @@ export async function downloadMedias(
 ) {
   const total = medias.length
   let i = 1
-  await Promise.all(
+  await Promise.race(
     medias.map(async ({ url, ext, type, outputDir }) => {
       const writePath: string =
-        outputDir || `./${outDir}/${resolveFileId(url, type)}.${ext}`
+        outputDir || `${outDir}/${resolveFileId(url, type)}.${ext}`
       try {
         if (type === 'video') {
-          const res = await axios.get(url, {
-            responseType: 'stream',
-            ...USER_AGENT_HEADER,
-          })
-          const stream = res.data
-          const writeStream = stream.pipe(fs.createWriteStream(writePath))
-          writeStream.on('finish', () => {
-            writeStream.close()
-          })
-          writeStream.on('error', (err: any) => {
-            writeStream.close()
-            throw new Error(err.message)
-          })
+          await streamPipe(url, writePath)
         } else {
-          const res = await axios.get(url, {
-            responseType: 'arraybuffer',
+          const res = await got.get(url, {
             ...USER_AGENT_HEADER,
+            responseType: 'buffer',
           })
-          await fsp.writeFile(writePath, res.data)
+          await fsp.writeFile(writePath, res.rawBody)
         }
       } catch (error: any) {
         failed.push({
@@ -157,12 +145,11 @@ async function scrollToBottom(page: Page) {
 
 export async function execMediaDownload(users: string[], options: Config) {
   const { outDir, token, dev, product, retry } = options
-  await Promise.all(
+  await Promise.race(
     users.map(async (user) => {
       const start = Date.now()
       const outputDir = outDir + '/' + user
       const baseUrl = XURL + user
-      // scrape is slow, mkdir can be sync
       await fsp.mkdir(outputDir, { recursive: true })
       const { images, videos } = await scraperMedias(baseUrl, user, {
         token,
@@ -188,8 +175,7 @@ export async function execMediaDownload(users: string[], options: Config) {
           prevMedias,
         ).finally(() => {
           console.log(
-            color.green(`✔ ${i === 0 ? '' : `retry(${i})`}`) +
-              ' ❯ ' +
+            color.green(`✔ ${i === 0 ? '' : `retry(${i})`} ❯ `) +
               color.cyan('user') +
               `(${user}) ❯ ` +
               `${Date.now() - start}ms`,
