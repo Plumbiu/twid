@@ -36,10 +36,6 @@ export async function scraperMedias(
   // mobile device cost less flow and take less time to load
   await page.emulate(iPhone)
   await page.goto(baseUrl)
-  await page.setViewport({
-    width: 50,
-    height: 0,
-  })
   await page.setCookie({
     name: 'auth_token',
     value: token,
@@ -76,6 +72,7 @@ export async function scraperMedias(
   })
   await scrollToBottom(page)
   await wait(1500)
+  await page.close()
   await browser.close()
 
   return {
@@ -191,7 +188,8 @@ export async function execMediaDownload(users: string[], options: Config) {
           prevMedias,
         ).finally(() => {
           console.log(
-            color.green(`✔ ${i === 0 ? '' : `retry(${i}) `}`) +
+            color.green(`✔ ${i === 0 ? '' : `retry(${i})`}`) +
+              ' ❯ ' +
               color.cyan('user') +
               `(${user}) ❯ ` +
               `${Date.now() - start}ms`,
@@ -201,9 +199,18 @@ export async function execMediaDownload(users: string[], options: Config) {
         prevMedias = []
       }
       console.log(
-        color.red(`faild(${currMedias.length})`) +
+        color.red(`✘ failed(${currMedias.length})`) +
           ' ❯ ' +
-          color.yellow(currMedias.join('\n')),
+          color.cyan('user\n') +
+          currMedias
+            .map(
+              (item) =>
+                // eslint-disable-next-line @stylistic/implicit-arrow-linebreak
+                `  ${color.cyan(user)} ❯ ${color.yellow(item.url)} ❯ ${
+                  item.ext
+                }`,
+            )
+            .join('\n'),
       )
     }),
   )
