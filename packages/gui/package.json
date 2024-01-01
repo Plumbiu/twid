@@ -1,29 +1,6 @@
 {
-  "name": "twid-monorepo",
-  "version": "0.2.0",
-  "description": "A simple Twitter scraping in headless mode for Chrome and Firefox, written in nodejs and doesn't need the Twitter API",
+  "name": "twid-gui",
   "type": "module",
-  "scripts": {
-    "build": "pnpm -r run build",
-    "test:dev": "pnpm vitest",
-    "test": "pnpm vitest --run"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/truthRestorer/twid.git"
-  },
-  "bugs": {
-    "url": "https://github.com/truthRestorer/twid/issues"
-  },
-  "homepage": "https://github.com/truthRestorer/twid#readme",
   "author": "Plumbiu",
-  "license": "MIT",
-  "devDependencies": {
-    "@plumbiu/eslint-config": "^0.2.0",
-    "@types/node": "^20.10.5",
-    "eslint": "^8.56.0",
-    "tsup": "^8.0.1",
-    "typescript": "^5.3.3",
-    "vitest": "^1.1.0"
-  }
+  "license": "MIT"
 }
