@@ -1,7 +1,5 @@
 export const XURL = 'https://twitter.com/'
 
-export const CONFIG_FILE = 'twid.config.json'
-
 export const GIF_PARAM = '/tweet_video_thumb/'
 
 export const IMAGE_URL = 'https://pbs.twimg.com/media/'

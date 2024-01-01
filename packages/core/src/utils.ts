@@ -2,7 +2,7 @@ import { pipeline as streamPipeline } from 'node:stream/promises'
 import fs from 'node:fs'
 import color from 'picocolors'
 import { got } from 'got'
-import { Media, MediaType } from './types'
+import { Media, MediaType } from 'twid-share'
 import { GIF_PARAM, USER_AGENT_HEADER } from './constant'
 
 export async function wait(mil: number) {

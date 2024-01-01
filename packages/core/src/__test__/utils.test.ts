@@ -1,12 +1,12 @@
 /* eslint-disable @stylistic/max-len */
 import { expect, test } from 'vitest'
-import media from './usermedia.json'
 import {
   isCompliantUrl,
   resolveFormatMedia,
   resolveURLType,
   resolveVideoInfo,
-} from 'src/utils'
+} from '../utils'
+import media from './usermedia.json'
 
 test('resolveURLType', () => {
   let p = 'http://foo?format=jpg'

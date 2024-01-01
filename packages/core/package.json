@@ -1,0 +1,16 @@
+{
+  "name": "twid-core",
+  "version": "0.2.0",
+  "main": "src/index.ts",
+  "author": "Plumbiu",
+  "type": "module",
+  "license": "MIT",
+  "devDependencies": {
+    "got": "^14.0.0",
+    "picocolors": "^1.0.0",
+    "twid-share": "workspace:^"
+  },
+  "dependencies": {
+    "puppeteer": "^21.6.1"
+  }
+}

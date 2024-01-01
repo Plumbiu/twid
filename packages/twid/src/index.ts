@@ -1,9 +1,10 @@
 import fs from 'node:fs'
 import { cac } from 'cac'
 import color from 'picocolors'
-import type { Config } from './types'
-import { execMediaDownload } from './scraper'
-import { CONFIG_FILE } from './constant'
+import type { Config } from 'twid-share'
+import { execMediaDownload } from 'twid-core'
+
+const CONFIG_FILE = 'twid.config.json'
 
 const cli = cac('twid')
 cli

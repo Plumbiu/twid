@@ -2,7 +2,7 @@ import fsp from 'node:fs/promises'
 import { launch, type Page, KnownDevices } from 'puppeteer'
 import color from 'picocolors'
 import { got } from 'got'
-import { Config, Media } from './types'
+import type { Config, Media } from 'twid-share'
 import {
   isCompliantUrl,
   isGifUrl,
@@ -201,3 +201,6 @@ export async function execMediaDownload(users: string[], options: Config) {
     }),
   )
 }
+
+export * from './utils'
+export * from './constant'
