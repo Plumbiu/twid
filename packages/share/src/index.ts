@@ -1,5 +1,3 @@
-import type { Product } from 'puppeteer'
-
 export type MediaType = 'image' | 'video'
 
 export interface Media {
@@ -14,5 +12,5 @@ export interface Config {
   token: string
   dev: boolean
   retry: number
-  product: Product
+  product: 'chrome' | 'firefox'
 }
