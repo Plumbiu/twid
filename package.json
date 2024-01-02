@@ -10,12 +10,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/truthRestorer/twid.git"
+    "url": "git+https://github.com/plumbiu/twid.git"
   },
   "bugs": {
-    "url": "https://github.com/truthRestorer/twid/issues"
+    "url": "https://github.com/plumbiu/twid/issues"
   },
-  "homepage": "https://github.com/truthRestorer/twid#readme",
+  "homepage": "https://github.com/plumbiu/twid#readme",
   "author": "Plumbiu",
   "license": "MIT",
   "devDependencies": {
