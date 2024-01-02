@@ -1,6 +1,7 @@
 {
   "name": "twid-share",
-  "main": "src/index.ts",
+  "version": "0.2.1",
+  "main": "./src/index.ts",
   "type": "module",
   "author": "Plumbiu",
   "license": "MIT"
