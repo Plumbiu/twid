@@ -55,17 +55,3 @@ Options:
   -P, --product [product]     Use chrome of firefox (default: chrome)
   -h, --help                  Display this message
 ```
-
-## Config File
-
-create `twid.config.json`, the file should like this:
-
-```json
-{
-  "users": ["elonmusk", "youyuxi"],
-  "token": "YOUR_TOKEN",
-  "outDir": "./twid-dist",
-  "dev": false,
-  "product": "chrome"
-}
-```

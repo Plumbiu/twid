@@ -1,14 +1,11 @@
-import fs from 'node:fs'
 import { cac } from 'cac'
 import color from 'picocolors'
 import type { Config } from 'twid-share'
 import { execMediaDownload } from 'twid-core'
 
-const CONFIG_FILE = 'twid.config.json'
-
 const cli = cac('twid')
 cli
-  .command('[...users]')
+  .command('<...users>')
   .option('-O, --outDir [outDir]', 'The output dir', {
     default: 'twid-dist',
   })
@@ -23,31 +20,15 @@ cli
     default: 'chrome',
   })
   .action(async (users: string[], cliConfig: Config) => {
-    const options: Config & {
-      users: string[]
-    } = {
-      users: [],
-      outDir: '',
-      token: '',
-      dev: false,
-      product: 'chrome',
-      retry: 3,
-    }
-    if (fs.existsSync(CONFIG_FILE)) {
-      const fileConfig = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf-8'))
-      Object.assign(options, { ...cliConfig, users }, fileConfig)
-    }
-    if (!options.token) {
+    if (!cliConfig.token) {
       console.log(color.red('ℹ need --token option'))
-    } else if (!options.users) {
-      console.log(color.red('ℹ can not find users'))
     } else {
       console.log(
-        `${color.green('ℹ')} users(${options.users.length}) ❯ (${color.cyan(
-          options.users.join(', '),
+        `${color.green('ℹ')} users(${users.length}) ❯ (${color.cyan(
+          users.join(', '),
         )})`,
       )
-      await execMediaDownload(options.users, options)
+      await execMediaDownload(users, cliConfig)
     }
   })
 
