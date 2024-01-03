@@ -2,6 +2,7 @@ import https from 'node:https'
 import fs from 'node:fs'
 import color from 'picocolors'
 import { Media, MediaType } from 'twid-share'
+import type { Ora } from 'ora'
 import { GIF_PARAM, USER_AGENT_HEADER } from './constant'
 
 export async function wait(mil: number) {
@@ -48,6 +49,7 @@ export function resolveVideoInfo(
   data: string,
   videos: Set<string>,
   user: string,
+  spinner: Ora,
 ) {
   let m
   while ((m = VIDEO_REGX.exec(data))) {
@@ -77,9 +79,8 @@ export function resolveVideoInfo(
       return
     }
     videos.add(resolveMediaBuild(videoUrl, ext, 'video'))
-    console.log(
-      '  ' + color.cyan(user) + ` ❯ ${color.green(videoUrl)} ❯ ` + ext,
-    )
+    spinner.text =
+      '  ' + color.cyan(user) + ` ❯ ${color.green(videoUrl)} ❯ ` + ext
   }
 }
 

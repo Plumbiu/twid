@@ -2,6 +2,7 @@ import fsp from 'node:fs/promises'
 import { launch, type Page, KnownDevices } from 'puppeteer'
 import color from 'picocolors'
 import type { Config, Media } from 'twid-share'
+import ora from 'ora'
 import {
   isCompliantUrl,
   isGifUrl,
@@ -23,6 +24,7 @@ export async function scraperMedias(
   user: string,
   { token, dev, product }: Pick<Config, 'token' | 'dev' | 'product'>,
 ) {
+  const spinner = ora('browser launching ....').start()
   const browser = await launch({
     ignoreHTTPSErrors: true,
     headless: dev ? false : 'new',
@@ -40,6 +42,7 @@ export async function scraperMedias(
     value: token,
   })
   await page.goto(baseUrl + '/media')
+  let i = 1
   page.on('request', async (req) => {
     const reqType = req.resourceType()
     if (reqType === 'image') {
@@ -51,29 +54,29 @@ export async function scraperMedias(
         )
         const url = `https://video.twimg.com/tweet_video/${hash}.mp4`
         videos.add(resolveMediaBuild(url, 'mp4', 'video'))
-        console.log(
-          '  ' + color.cyan(user) + ` ❯ ${color.green(url)} ❯ ` + 'mp4',
-        )
       } else if (isCompliantUrl(reqUrl)) {
         const url = resolveURL(reqUrl)
         const ext = resolveURLType(reqUrl)
         images.add(resolveMediaBuild(url, ext, 'image'))
-        console.log('  ' + color.cyan(user) + ` ❯ ${color.green(url)} ❯ ` + ext)
       }
+      spinner.text = `find ${color.underline(i++)} images and ${color.underline(
+        videos.size,
+      )} videos`
     }
   })
   page.on('response', async (res) => {
     const url = res.url()
     if (url.includes('UserMedia')) {
       const requestSource = await res.text()
-      resolveVideoInfo(requestSource, videos, user)
+      resolveVideoInfo(requestSource, videos, user, spinner)
     }
   })
+
   await scrollToBottom(page)
   await wait(500)
   await page.close()
   await browser.close()
-
+  spinner.stop()
   return {
     images: resolveFormatMedia(images),
     videos: resolveFormatMedia(videos),
@@ -101,14 +104,13 @@ export async function downloadMedias(
           type,
           outputDir: writePath,
         })
-      } finally {
-        console.log(
-          '  ' +
-            color.cyan(user) +
-            ` ❯ ${color.green(writePath)} ❯ ` +
-            color.white(`${i++}/${total}`),
-        )
       }
+      console.log(
+        '  ' +
+          color.cyan(user) +
+          ` ❯ ${color.green(writePath)} ❯ ` +
+          color.white(`${i++}/${total}`),
+      )
     }),
   )
 }
@@ -164,14 +166,13 @@ export async function execMediaDownload(users: string[], options: Config) {
             outDir: outputDir,
           },
           prevMedias,
-        ).finally(() => {
-          console.log(
-            color.green(`✔ ${i === 0 ? '' : `retry(${i})`} ❯ `) +
-              color.cyan('user') +
-              `(${user}) ❯ ` +
-              `${Date.now() - start}ms`,
-          )
-        })
+        )
+        console.log(
+          color.green(`✔ ${i === 0 ? '' : `retry(${i})`} ❯ `) +
+            color.cyan('user') +
+            `(${user}) ❯ ` +
+            `${Date.now() - start}ms`,
+        )
         currMedias = prevMedias
         prevMedias = []
       }

@@ -6,6 +6,7 @@
   "type": "module",
   "license": "MIT",
   "devDependencies": {
+    "ora": "^8.0.1",
     "picocolors": "^1.0.0",
     "twid-share": "workspace:^"
   },
