@@ -21,6 +21,9 @@ npm i -g twid
 twid elonmusk youyuxi --token YOUR_TOKEN
 ```
 
+> [!NOTE]
+> The users parameter is in the url, like `https://twitter.com/elonmusk`
+
 ## --token
 
 You can find `token` in `devtool -> application -> Cookie(chosse https://twitter.com) -> auth_token`:
@@ -39,10 +42,10 @@ twid --help
 
 ```txt
 Usage:
-  $ twid [...users]
+  $ twid <...users>
 
 Commands:
-  [...users]  
+  <...users>  
 
 For more info, run any command with the `--help` flag:
   $ twid --help
