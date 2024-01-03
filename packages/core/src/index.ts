@@ -1,7 +1,6 @@
 import fsp from 'node:fs/promises'
 import { launch, type Page, KnownDevices } from 'puppeteer'
 import color from 'picocolors'
-import { got } from 'got'
 import type { Config, Media } from 'twid-share'
 import {
   isCompliantUrl,
@@ -15,9 +14,9 @@ import {
   streamPipe,
   wait,
 } from './utils'
-import { GIF_PARAM, USER_AGENT_HEADER, XURL } from './constant'
+import { GIF_PARAM, XURL } from './constant'
 
-const iPhone = KnownDevices['iPhone 6']
+const iPhone = KnownDevices['iPhone SE']
 
 export async function scraperMedias(
   baseUrl: string,
@@ -43,8 +42,8 @@ export async function scraperMedias(
   await page.goto(baseUrl + '/media')
   page.on('request', async (req) => {
     const reqType = req.resourceType()
-    const reqUrl = req.url()
     if (reqType === 'image') {
+      const reqUrl = req.url()
       if (isGifUrl(reqUrl)) {
         const hash = reqUrl.slice(
           reqUrl.indexOf(GIF_PARAM) + GIF_PARAM.length,
@@ -71,7 +70,7 @@ export async function scraperMedias(
     }
   })
   await scrollToBottom(page)
-  await wait(1500)
+  await wait(500)
   await page.close()
   await browser.close()
 
@@ -94,15 +93,7 @@ export async function downloadMedias(
       const writePath: string =
         outputDir || `${outDir}/${resolveFileId(url, type)}.${ext}`
       try {
-        if (type === 'video') {
-          await streamPipe(url, writePath)
-        } else {
-          const res = await got.get(url, {
-            ...USER_AGENT_HEADER,
-            responseType: 'buffer',
-          })
-          await fsp.writeFile(writePath, res.rawBody)
-        }
+        await streamPipe(url, writePath)
       } catch (error: any) {
         failed.push({
           url,

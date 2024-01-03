@@ -1,7 +1,6 @@
-import { pipeline as streamPipeline } from 'node:stream/promises'
+import https from 'node:https'
 import fs from 'node:fs'
 import color from 'picocolors'
-import { got } from 'got'
 import { Media, MediaType } from 'twid-share'
 import { GIF_PARAM, USER_AGENT_HEADER } from './constant'
 
@@ -107,11 +106,19 @@ export function resolveFileId(url: string, type: MediaType) {
   return result.slice(0, result.lastIndexOf('.'))
 }
 
-export async function streamPipe(url: string, outputDir: string) {
-  await streamPipeline(
-    got.stream(url, {
-      ...USER_AGENT_HEADER,
-    }),
-    fs.createWriteStream(outputDir),
-  )
+export function streamPipe(url: string, outputDir: string) {
+  return new Promise<void>((resolve) => {
+    https.get(
+      url,
+      {
+        ...USER_AGENT_HEADER,
+      },
+      (res) => {
+        res.pipe(fs.createWriteStream(outputDir))
+        res.on('end', () => {
+          resolve()
+        })
+      },
+    )
+  })
 }
