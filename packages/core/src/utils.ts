@@ -142,5 +142,9 @@ export async function streamPipe(
         failed.push(media)
         resolve()
       })
+      .on('timeout', () => {
+        failed.push(media)
+        resolve()
+      })
   })
 }
