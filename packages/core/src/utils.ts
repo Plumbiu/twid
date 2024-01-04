@@ -107,15 +107,39 @@ export function resolveFileId(url: string, type: MediaType) {
   return result.slice(0, result.lastIndexOf('.'))
 }
 
-export function streamPipe(url: string, outputDir: string) {
+export async function streamPipe(
+  requestUrl: string,
+  writePath: string,
+  failed: Media[],
+  { url, ext, type, outputDir }: Media,
+) {
   return new Promise<void>((resolve) => {
     https.get(
-      url,
+      requestUrl,
       {
         ...USER_AGENT_HEADER,
       },
       (res) => {
-        res.pipe(fs.createWriteStream(outputDir))
+        const writeStream = fs.createWriteStream(writePath)
+        res.pipe(writeStream)
+        res.on('error', () => {
+          failed.push({
+            url,
+            ext,
+            type,
+            outputDir: writePath,
+          })
+          resolve()
+        })
+        writeStream.on('error', () => {
+          failed.push({
+            url,
+            ext,
+            type,
+            outputDir: writePath,
+          })
+          resolve()
+        })
         res.on('end', () => {
           resolve()
         })

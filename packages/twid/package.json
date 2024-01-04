@@ -1,6 +1,6 @@
 {
   "name": "twid",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "description": "A simple Twitter scraping in headless mode for Chrome and Firefox, written in nodejs and doesn't need the Twitter API",
   "main": "dist/index.js",
   "type": "module",
