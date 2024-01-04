@@ -96,7 +96,7 @@ export async function downloadMedias(
       const writePath: string =
         outputDir || `${outDir}/${resolveFileId(url, type)}.${ext}`
       try {
-        await streamPipe(url, writePath, failed, {
+        await streamPipe(url, failed, {
           url,
           ext,
           type,
