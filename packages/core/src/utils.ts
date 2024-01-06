@@ -49,7 +49,7 @@ export function resolveVideoInfo(
   data: string,
   videos: Set<string>,
   user: string,
-  spinner: Ora,
+  spinner?: Ora,
 ) {
   let m
   while ((m = VIDEO_REGX.exec(data))) {
@@ -79,8 +79,10 @@ export function resolveVideoInfo(
       return
     }
     videos.add(resolveMediaBuild(videoUrl, ext, 'video'))
-    spinner.text =
-      '  ' + color.cyan(user) + ` ❯ ${color.green(videoUrl)} ❯ ` + ext
+    if (spinner) {
+      spinner.text =
+        '  ' + color.cyan(user) + ` ❯ ${color.green(videoUrl)} ❯ ` + ext
+    }
   }
 }
 
