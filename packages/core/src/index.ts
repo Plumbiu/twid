@@ -91,7 +91,7 @@ export async function downloadMedias(
 ) {
   const total = medias.length
   let i = 1
-  await Promise.race(
+  await Promise.all(
     medias.map(async ({ url, ext, type, outputDir }) => {
       const writePath: string =
         outputDir || `${outDir}/${resolveFileId(url, type)}.${ext}`
@@ -143,7 +143,7 @@ async function scrollToBottom(page: Page) {
 
 export async function execMediaDownload(users: string[], options: Config) {
   const { outDir, token, dev, product, retry } = options
-  await Promise.race(
+  await Promise.all(
     users.map(async (user) => {
       const start = Date.now()
       const outputDir = outDir + '/' + user
